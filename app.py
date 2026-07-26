@@ -2,9 +2,15 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import json
 import os
+import google.generativeai as genai
 
 app = Flask(__name__)
 CORS(app)
+
+# ============================================
+# 🔥 GANTI DENGAN API KEY KAMU
+# ============================================
+genai.configure(api_key="AQ.Ab8RN6loIxGhLVLXDPYvbdUIBetJj9WpyWZ7hlwcNFsLbL1BSA")
 
 DB_FILE = "db.json"
 
@@ -50,13 +56,14 @@ def login():
 @app.route("/api/ai", methods=["POST"])
 def ai():
     data = request.json
-    prompt = data.get("prompt", "").lower()
-    if "halo" in prompt or "hai" in prompt:
-        return jsonify({"response": "Halo! Ada yang bisa aku bantu?"})
-    elif "nama" in prompt:
-        return jsonify({"response": "Aku adalah AI APK, asisten pintarmu!"})
-    else:
-        return jsonify({"response": f"Kamu bertanya: '{data.get('prompt')}'. Aku masih belajar!"})
+    prompt = data.get("prompt", "")
+
+    try:
+        model = genai.GenerativeModel("gemini-1.5-flash")
+        response = model.generate_content(prompt)
+        return jsonify({"response": response.text})
+    except Exception as e:
+        return jsonify({"response": f"❌ Error: {str(e)}"}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000, debug=True)
